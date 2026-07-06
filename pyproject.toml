@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "atlas-iac"
+version = "0.1.0"
+description = "Blast-radius analyzer for Terraform plans — see what your PR really touches"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Pushp Gupta", email = "pugpta2601@gmail.com" }]
+dependencies = ["typer>=0.12", "rich>=13"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+atlas = "atlas.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/atlas"]
