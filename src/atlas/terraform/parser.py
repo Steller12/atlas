@@ -28,10 +28,9 @@ _ACTION_MAP = {
 def normalize_actions(actions: list[str]) -> str:
     return _ACTION_MAP.get(tuple(actions), "unknown")
 
-
-def load_plan(path: str) -> list[ResourceChange]:
-    """Read a terraform plan JSON file and return the list of resource changes."""
-    p=Path(path)
+def read_plan_json(path: str) -> dict:
+    """Read and validate a terraform plan JSON file, return the parsed dict."""
+    p = Path(path)
     if not p.exists():
         raise AtlasError(f"plan file not found: {path}")
     text = p.read_text(encoding="utf-8-sig")
@@ -41,6 +40,11 @@ def load_plan(path: str) -> list[ResourceChange]:
         raise AtlasError(f"invalid JSON in {path}: {e}") from e
     if "resource_changes" not in data:
         raise AtlasError("not a terraform plan JSON: missing resource_changes")
+    return data
+
+def load_plan(path: str) -> list[ResourceChange]:
+    """Read a terraform plan JSON file and return the list of resource changes."""
+    data = read_plan_json(path)
     changes=[]
     for rc in data["resource_changes"]:
         actions=rc["change"]["actions"]
