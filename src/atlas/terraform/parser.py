@@ -1,0 +1,59 @@
+import json
+from dataclasses import dataclass
+from pathlib import Path
+
+from atlas.errors import AtlasError
+
+
+@dataclass(frozen=True)
+class ResourceChange:
+    address: str
+    type: str
+    name: str
+    actions: tuple[str, ...]   # raw actions, as a tuple (hashable + immutable)
+    action: str                # normalized: create/update/delete/replace/unknown
+    before: dict | None
+    after: dict | None
+
+
+_ACTION_MAP = {
+    ("create",): "create",
+    ("update",): "update",
+    ("delete",): "delete",
+    ("delete", "create"): "replace",
+    ("create", "delete"): "replace",
+}
+
+
+def normalize_actions(actions: list[str]) -> str:
+    return _ACTION_MAP.get(tuple(actions), "unknown")
+
+
+def load_plan(path: str) -> list[ResourceChange]:
+    """Read a terraform plan JSON file and return the list of resource changes."""
+    p=Path(path)
+    if not p.exists():
+        raise AtlasError(f"plan file not found: {path}")
+    text = p.read_text(encoding="utf-8-sig")
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as e:
+        raise AtlasError(f"invalid JSON in {path}: {e}") from e
+    if "resource_changes" not in data:
+        raise AtlasError("not a terraform plan JSON: missing resource_changes")
+    changes=[]
+    for rc in data["resource_changes"]:
+        actions=rc["change"]["actions"]
+        if actions==["no-op"]:
+            continue
+        change = ResourceChange(
+            address=rc.get("address", ""),
+            type=rc.get("type", ""),
+            name=rc.get("name", ""),
+            actions=tuple(actions),
+            action=normalize_actions(actions),
+            before=rc["change"].get("before"),
+            after=rc["change"].get("after"),
+        )
+        changes.append(change) 
+    return changes

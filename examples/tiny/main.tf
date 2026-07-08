@@ -1,5 +1,5 @@
 resource "random_pet" "server" {
-  length = 3
+  length = 2
 }
 
 resource "null_resource" "app" {
