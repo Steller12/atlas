@@ -49,7 +49,7 @@ def test_score_change_caps_blast_radius_and_total_score():
     risk = score_change(make_change("delete", "aws_rds_cluster"), impacted_count=9)
 
     assert risk.score == 10
-    assert "3 downstream resources impacted (+3)" in risk.reasons
+    assert "9 downstream resources impacted (+3)" in risk.reasons
 
 
 def test_score_plan_uses_per_resource_blast_radius_and_sorts_by_score():
