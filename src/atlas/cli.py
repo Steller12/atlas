@@ -9,6 +9,7 @@ from atlas.terraform.parser import load_plan
 from atlas.graph.impact import build_graph, downstream
 from atlas.terraform.parser import read_plan_json
 
+from atlas.scoring.heuristics import score_plan
 
 app = typer.Typer(help="Atlas — blast-radius analysis for Terraform plans.")
 console = Console()
@@ -55,9 +56,17 @@ def impact(
     changed = {c.address for c in changes}
     impacted = downstream(changed, graph, max_depth=max_depth)
 
+    risks = score_plan(changes, graph)
+    overall = max((r.score for r in risks), default=0)
+    worst = next((r.level for r in risks if r.score == overall), "low")
+
     console.print(
         f"[bold]Atlas impact[/bold] — {len(changed)} changed, "
-        f"{len(impacted)} impacted downstream"
+        f"{len(impacted)} impacted downstream — "
+        f"risk: [bold]{worst.upper()}[/bold] ({overall}/10)"
     )
     for addr, path in sorted(impacted.items()):
         console.print(f"  [yellow]{addr}[/yellow]  [dim]why: {' -> '.join(path)}[/dim]")
+    for r in risks:
+        reasons = "; ".join(r.reasons)
+        console.print(f"  [bold]{r.address}[/bold] — {r.level} ({r.score}/10)  [dim]{reasons}[/dim]")
