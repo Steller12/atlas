@@ -8,7 +8,10 @@ Direction rule (memorize):
 from collections import deque
 
 def parse_references(data: dict) -> list[tuple[str, str]]:
-    """Return (referencing_address, raw_reference) pairs from the configuration section."""
+    """
+    Return (referencing_address, raw_reference) pairs from the configuration
+    section.
+    """
     resources = data.get("configuration",{}).get("root_module", {}).get("resources", [])
     pairs=[]
     for res in resources:
@@ -45,7 +48,7 @@ def resolve_reference(ref: str, known: set[str]) -> str | None:
         return ref
     for addr in known:
         if ref.startswith(addr+"."):
-            return addr  
+            return addr
     return None
 
 
@@ -57,7 +60,7 @@ def build_graph(data: dict) -> dict[str, set[str]]:
     for (referencing_addr, raw_ref) in parse_references(data):
         target= resolve_reference(raw_ref, known)
         if target is None or target==referencing_addr:
-            continue 
+            continue
         graph.setdefault(target, set()).add(referencing_addr)
     return graph
 

@@ -68,4 +68,7 @@ def impact(
         console.print(f"  [yellow]{addr}[/yellow]  [dim]why: {' -> '.join(path)}[/dim]")
     for r in risks:
         reasons = "; ".join(r.reasons)
-        console.print(f"  [bold]{r.address}[/bold] — {r.level} ({r.score}/10)  [dim]{reasons}[/dim]")
+        console.print(
+            f"  [bold]{r.address}[/bold] — {r.level} ({r.score}/10)"
+            f"  [dim]{reasons}[/dim]"
+        )

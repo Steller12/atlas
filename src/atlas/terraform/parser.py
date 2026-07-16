@@ -70,5 +70,5 @@ def load_plan(path: str, data: dict | None = None) -> list[ResourceChange]:
             before=change_block.get("before"),
             after=change_block.get("after"),
         )
-        changes.append(change) 
+        changes.append(change)
     return changes
