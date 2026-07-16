@@ -20,3 +20,14 @@ atlas = "atlas.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/atlas"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]

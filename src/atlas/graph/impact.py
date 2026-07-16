@@ -20,18 +20,6 @@ def parse_references(data: dict) -> list[tuple[str, str]]:
                 for ref in expr.get("references", []):
                     pairs.append((addr, ref))
     return pairs
-    # 1. resources = data.get("configuration", {}).get("root_module", {}).get("resources", [])
-    #    (chained .get() with defaults — configuration section may be absent; empty list = no edges, not a crash)
-    # 2. pairs = []   ← accumulator pattern again
-    # 3. for res in resources:
-    #        addr = res.get("address")
-    #        if not addr: skip (continue)
-    #        for expr in res.get("expressions", {}).values():
-    #            if isinstance(expr, dict):              ← tolerate non-dict expression values
-    #                for ref in expr.get("references", []):
-    #                    append (addr, ref) to pairs
-    # 4. return pairs
-    ...
 
 
 def collect_addresses(data: dict) -> set[str]:
@@ -48,10 +36,7 @@ def collect_addresses(data: dict) -> set[str]:
         if addr:
             known.add(addr)
     return known
-    # set comprehension over data.get("resource_changes", []) → rc.get("address")
-    # then add addresses from configuration resources (same walk as parse_references step 1)
-    # return the set (drop None/empty)
-    ...
+
 
 
 def resolve_reference(ref: str, known: set[str]) -> str | None:
@@ -62,10 +47,7 @@ def resolve_reference(ref: str, known: set[str]) -> str | None:
         if ref.startswith(addr+"."):
             return addr  
     return None
-    # exact match: ref in known → return ref
-    # attribute form: for addr in known: if ref.startswith(addr + ".") → return addr
-    # anything else (var.x, local.y, module inputs...) → return None
-    ...
+
 
 
 def build_graph(data: dict) -> dict[str, set[str]]:
@@ -78,16 +60,7 @@ def build_graph(data: dict) -> dict[str, set[str]]:
             continue 
         graph.setdefault(target, set()).add(referencing_addr)
     return graph
-    # known = collect_addresses(data)
-    # graph: dict[str, set[str]] = {}
-    # for (referencing_addr, raw_ref) in parse_references(data):
-    #     target = resolve_reference(raw_ref, known)
-    #     if target is None or target == referencing_addr: skip
-    #     ⚠ DIRECTION: referencing_addr depends on target
-    #        → graph.setdefault(target, set()).add(referencing_addr)
-    #     (setdefault = "get the set, creating an empty one first if missing")
-    # return graph
-    ...
+
 
 
 def downstream(
@@ -113,17 +86,3 @@ def downstream(
             queue.append((neighbour, path+[neighbour],depth+1))
     return result
 
-    # classic BFS — same as your Week 3 LeetCode problems:
-    # queue = deque of (address, path_so_far, depth) seeded with (c, [c], 0) for each changed
-    # visited = set(changed)   ← seed visited with changed so you don't re-visit sources
-    # result = {}
-    # while queue:
-    #     addr, path, depth = queue.popleft()
-    #     if depth == max_depth: continue
-    #     for neighbor in graph.get(addr, set()):
-    #         if neighbor in visited: continue
-    #         visited.add(neighbor)
-    #         result[neighbor] = path + [neighbor]
-    #         queue.append((neighbor, path + [neighbor], depth + 1))
-    # return result
-    ...

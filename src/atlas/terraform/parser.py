@@ -42,12 +42,23 @@ def read_plan_json(path: str) -> dict:
         raise AtlasError("not a terraform plan JSON: missing resource_changes")
     return data
 
-def load_plan(path: str) -> list[ResourceChange]:
-    """Read a terraform plan JSON file and return the list of resource changes."""
-    data = read_plan_json(path)
+def load_plan(path: str, data: dict | None = None) -> list[ResourceChange]:
+    """Read a terraform plan JSON file and return the list of resource changes.
+
+    If ``data`` is provided (pre-parsed JSON), it is used directly instead
+    of reading + parsing the file a second time.
+    """
+    if data is None:
+        data = read_plan_json(path)
     changes=[]
     for rc in data["resource_changes"]:
-        actions=rc["change"]["actions"]
+        change_block = rc.get("change")
+        if not isinstance(change_block, dict) or "actions" not in change_block:
+            raise AtlasError(
+                f"malformed resource change at {rc.get('address', '?')}: "
+                "missing 'change.actions' field"
+            )
+        actions = change_block["actions"]
         if actions==["no-op"]:
             continue
         change = ResourceChange(
@@ -56,8 +67,8 @@ def load_plan(path: str) -> list[ResourceChange]:
             name=rc.get("name", ""),
             actions=tuple(actions),
             action=normalize_actions(actions),
-            before=rc["change"].get("before"),
-            after=rc["change"].get("after"),
+            before=change_block.get("before"),
+            after=change_block.get("after"),
         )
         changes.append(change) 
     return changes

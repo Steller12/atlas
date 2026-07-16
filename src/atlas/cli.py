@@ -4,10 +4,9 @@ import typer
 from rich.console import Console
 
 from atlas.errors import AtlasError
-from atlas.terraform.parser import load_plan
+from atlas.terraform.parser import load_plan, read_plan_json
 
 from atlas.graph.impact import build_graph, downstream
-from atlas.terraform.parser import read_plan_json
 
 from atlas.scoring.heuristics import score_plan
 
@@ -46,8 +45,8 @@ def impact(
 ) -> None:
     """Show the blast radius of the changes in a terraform plan."""
     try:
-        changes = load_plan(plan_file)
         data = read_plan_json(plan_file)
+        changes = load_plan(plan_file, data=data)
     except AtlasError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(1) from e
